@@ -1,22 +1,15 @@
 """802.11 channel helpers: scan-hop ordering and per-band label/range compression."""
 from __future__ import annotations
 
-# Standard 2.4 GHz channels
-CHANNELS_2G = list(range(1, 15))
+# The non-overlapping 2.4 GHz trio nearly every router parks on (FCC 1/6/11)
+_PRIORITY_2G = (1, 6, 11)
 
-# Comprehensive 5 GHz channels list including UNII-1, UNII-2A, UNII-2C (DFS e.g. Ch 120), and UNII-3
-CHANNELS_5G = [
-    36, 40, 44, 48,
-    52, 56, 60, 64,
+# All standard 2.4GHz & 5GHz channels including DFS (Ch 120)
+ALL_5G_CHANNELS = [
+    36, 40, 44, 48, 52, 56, 60, 64,
     100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 144,
     149, 153, 157, 161, 165, 169, 173, 177
 ]
-
-# Combined default channels list
-DEFAULT_CHANNELS = CHANNELS_2G + CHANNELS_5G
-
-# Non-overlapping 2.4 GHz priority channels
-_PRIORITY_2G = (1, 6, 11)
 
 
 def parse_custom_channels(channel_input: str | list[int]) -> list[int]:
