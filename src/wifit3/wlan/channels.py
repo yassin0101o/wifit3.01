@@ -1,13 +1,26 @@
 """802.11 channel helpers: scan-hop ordering and per-band label/range compression."""
 from __future__ import annotations
 
+# Standard 2.4 GHz channels
+CHANNELS_2G = list(range(1, 15))
 
-# The non-overlapping 2.4 GHz trio nearly every router parks on (FCC 1/6/11)
+# Comprehensive 5 GHz channels list including UNII-1, UNII-2A, UNII-2C (DFS e.g. Ch 120), and UNII-3
+CHANNELS_5G = [
+    36, 40, 44, 48,
+    52, 56, 60, 64,
+    100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 144,
+    149, 153, 157, 161, 165, 169, 173, 177
+]
+
+# Combined default channels list
+DEFAULT_CHANNELS = CHANNELS_2G + CHANNELS_5G
+
+# Non-overlapping 2.4 GHz priority channels
 _PRIORITY_2G = (1, 6, 11)
 
 
 def parse_custom_channels(channel_input: str | list[int]) -> list[int]:
-    """دالة جديدة: لتحويل النص المدخل من المستخدم (مثل "36,40,52,100") إلى قائمة أرقام قنوات."""
+    """Parse user channel input string or list into a sorted list of integer channels."""
     if isinstance(channel_input, list):
         return sorted(list(set(channel_input)))
     
@@ -15,12 +28,10 @@ def parse_custom_channels(channel_input: str | list[int]) -> list[int]:
         return []
 
     channels = set()
-    # تقسيم المدخلات بحسب الفاصلة
     parts = channel_input.replace(";", ",").split(",")
     for part in parts:
         part = part.strip()
         if "-" in part:
-            # لدعم إدخال مجال قنوات مثل "36-48"
             try:
                 start, end = map(int, part.split("-"))
                 channels.update(range(start, end + 1))
@@ -41,7 +52,7 @@ def scan_hop_order(channels: list[int]) -> list[int]:
 
 
 def _split_bands(channels: list[int]) -> tuple[list[int], list[int]]:
-    """Sorted, de-duped (2.4 GHz ≤14, 5 GHz >14) split of a channel set."""
+    """Sorted, de-duped (2.4 GHz <=14, 5 GHz >14) split of a channel set."""
     chs = sorted(set(channels))
     return [c for c in chs if c <= 14], [c for c in chs if c > 14]
 
@@ -54,7 +65,6 @@ def _compress_runs(channels: list[int], step: int) -> str:
     runs: list[tuple[int, int]] = []
     start = prev = chs[0]
     for c in chs[1:]:
-        # التعديل هنا: السماح بقفزات مختلفة في الـ 5GHz بدلاً من اشتراط الخطوة 4 فقط
         if c == prev + step or (step == 4 and (c - prev) % 4 == 0):
             prev = c
         else:
