@@ -23,7 +23,7 @@ def parse_custom_channels(channel_input: str | list[int]) -> list[int]:
     """Parse user channel input string or list into a sorted list of integer channels."""
     if isinstance(channel_input, list):
         return sorted(list(set(channel_input)))
-    
+
     if not channel_input or not channel_input.strip():
         return []
 
