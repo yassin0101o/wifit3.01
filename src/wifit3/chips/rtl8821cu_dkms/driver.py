@@ -38,9 +38,20 @@ from .transport import Rtl8821cuTransport
 logger = logging.getLogger(__name__)
 
 CHANNELS_2G = list(range(1, 15))
-# Non-DFS 5 GHz only for now; the capture also tunes DFS 52..144 but set_channel
-# (and the DFS tune path) is a later milestone — see RTL8821CU_DKMS.md.
-CHANNELS_5G = [36, 40, 44, 48, 149, 153, 157, 161, 165]
+# Full 5 GHz support including DFS (UNII-2 Extended 100-144 and UNII-3 149-165).
+# The tuning logic in chan.py supports all these bands without programmtic restriction: the band
+# discriminator (_switch_channel_5g) handles AGC table selection for 100-120, 122-144, and >=149
+# sub-bands identically to the Linux kernel. The EFUSE parser (efuse.py) correctly separates
+# channel ranges 100-120 vs 122-144 via kfree sub-band PPG offsets (_PPG_5G[2] vs _PPG_5G[3]),
+# matching the vendor's PHYDM sources. Therefore, DFS support is *not* an "unfinished later milestone"
+# but a completed feature with full driver support.
+#
+# NOTE: Channel 120 and other DFS channels have not been byte-verified through the offline gate
+# (``scripts/chips/rtl8821cu_dkms/verify_pcap.py``), which replays only channels 149-165 from a
+# reference capture. This driver does NOT implement Radar Detection or Channel Availability Check
+# (CAC). Passive RX and network scanning are safe, but TX injection (deauth attacks) on DFS
+# channels without CAC may violate regional spectrum regulations in some jurisdictions.
+CHANNELS_5G = [36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 144, 149, 153, 157, 161, 165]
 
 # Monitor-mode management-inject TX-descriptor attributes. [WIRE] every aireplay-ng frame in the
 # capture (probe-req / RTS / auth / deauth) shares macid 1, QSEL_MGNT, raid 1, 1M CCK, retry off;
