@@ -51,16 +51,23 @@ def _split_bands(channels: list[int]) -> tuple[list[int], list[int]]:
 
 
 def _compress_runs(channels: list[int], step: int) -> str:
-    """Collapse a channel list into ``a-b, c, d-e``."""
+    """Collapse a channel list into ``a-b, c, d-e``.
+    
+    Consecutive channels (spaced by ``step``) are collapsed into runs.
+    A run is only formed when channels are directly adjacent by the step.
+    For 5 GHz with step=4, a gap (e.g., 64→100) breaks the run.
+    """
     chs = sorted(channels)
     if not chs:
         return ""
     runs: list[tuple[int, int]] = []
     start = prev = chs[0]
     for c in chs[1:]:
-        if c == prev + step or (step == 4 and (c - prev) % 4 == 0):
+        # Only continue a run if the channel is exactly step units away
+        if c == prev + step:
             prev = c
         else:
+            # Gap found: close the current run and start a new one
             runs.append((start, prev))
             start = prev = c
     runs.append((start, prev))
